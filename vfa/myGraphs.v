@@ -152,8 +152,8 @@ Definition mk_cmn_edge (g1 g2 : graph) (a b n m : node) : graph :=
   let m' := m + snd (gr_rng g1) in
  (* Delete adge from second graph *)
   let g2' := delete_edge g2' n' m' in
-  let g_result := mk_art g1 g2' a n' in 
-  let m' := m' + snd (gr_rng g1) in
+  let g_result :=  S.fold (fun m g' => M.add m (adj g2' m) g') (Mdomain g2') g1 in
+  let g_result := rename_node n' a g_result in 
   rename_node m' b g_result.
 
 (* articulation by 2 non adjacent points in one graph to build J *)
@@ -171,6 +171,7 @@ Definition H : graph :=
   rename_in_order (add_edge (2, snd (gr_rng g4)) g4).
 (* rename H *)
 
+
 Compute gr_show H.
 
 Definition HHH_H : graph :=
@@ -179,6 +180,7 @@ Definition HHH_H : graph :=
   let HHH := rename_node 14 12 HH_H in
   mk_cmn_edge HHH H 6 7 6 7.
 
+Compute gr_show HHH_H.
 
 
 Definition J: graph :=
@@ -201,17 +203,17 @@ Definition J: graph :=
 
 
 (* Works ~ 20 min *)
-(* Compute gr_show J. *)
+Compute gr_show J.
 
-(*
+
 Definition K: graph :=
-  let JJ := mk_art J J 1 in
+  let JJ := mk_art J J 1 1 in
   add_edges [(9, 9+31); (12, 12+31); (16, 16+31); (20, 20+31);
               (24, 24+31); (28, 28+31)] JJ.
 
 
 Compute gr_show K.
-*)
+
 
 
 Close Scope positive.
