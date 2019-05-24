@@ -208,12 +208,22 @@ Compute gr_show J.
 
 Definition K: graph :=
   let JJ := mk_art J J 1 1 in
-  add_edges [(9, 9+31); (12, 12+31); (16, 16+31); (20, 20+31);
-              (24, 24+31); (28, 28+31)] JJ.
-
+  let JJ := add_edges [(9, 9+31); (12, 12+31); (16, 16+31); (20, 20+31);
+              (24, 24+31); (28, 28+31)] JJ in
+  rename_in_order JJ.
 
 Compute gr_show K.
 
+
+Definition A := 9.
+Definition B := 20.
+
+Definition L: graph :=
+  let KK := mk_art K K A A in
+  let KK := add_edge (B, B+snd(gr_rng K)) KK in
+  rename_in_order KK.
+
+Compute gr_show L.
 
 
 Close Scope positive.
