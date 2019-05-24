@@ -125,16 +125,14 @@ Definition rename_in_order (g: graph) : graph :=
       ).
 
 
-Definition mk_art (g1 g2 : graph) (n : node) : graph :=
+Definition mk_art (g1 g2 : graph) (n m : node) : graph :=
   let g2' := rename_all (fun x => x + snd(gr_rng g1)) g2 in
-  let n' := n + snd(gr_rng g1) in
+  let m' := m + snd(gr_rng g1) in
   let g := S.fold (fun m g' => M.add m (adj g2' m) g') (Mdomain g2') g1 in
-  let g := rename_node n' n g in
-  rename_in_order g.
+  rename_node m' n g.
 
-
-Compute gr_show (mk_art K3 K3 1).
-Compute S.elements (Mdomain (mk_art K3 K3 1)).
+Compute gr_show (mk_art K3 K3 1 2).
+Compute S.elements (Mdomain (mk_art K3 K3 1 1)).
 
 
 Print Module S.
@@ -146,7 +144,7 @@ Definition delete_edge (g: graph) (a b : node) : graph :=
   M.add b b_neigh (M.add a a_neigh g).
 
 
-Definition mk_cmn_edge' (g1 g2 : graph) (a b n m : node) : graph :=
+Definition mk_cmn_edge (g1 g2 : graph) (a b n m : node) : graph :=
 (* Make graphs disjoint. *)
   let g2' := rename_all (fun x => x + snd (gr_rng g1)) g2 in
 (* New names for the edge's vertices. *)
@@ -154,35 +152,9 @@ Definition mk_cmn_edge' (g1 g2 : graph) (a b n m : node) : graph :=
   let m' := m + snd (gr_rng g1) in
  (* Delete adge from second graph *)
   let g2' := delete_edge g2' n' m' in
-  let g_result := mk_art g1 g2'
-
-  
-
-  
-
-  
-
-
-
-
-(* Connect two graphs by identifying two edges. *)
-Definition mk_cmn_edge (g1 g2 : graph) (a b n m : node) : graph :=
-  let g2' := rename_all (fun x => x + snd (gr_rng g1)) g2 in
-(* New names for the edge's vertices. *)
-  let n' := n + snd (gr_rng g1) in
-  let m' := m + snd (gr_rng g1) in
-(* Remember the neighborhoods but removing edge n'm'. *)
-  let nigh_n := S.remove m' (adj g2' n') in
-  let nigh_m := S.remove n' (adj g2' m') in
-(* Remove the new copys of n and m. *)
-  let g2'' := remove_node m' (remove_node n' g2') in
-(* Join both pieces. *)
-  let g := S.fold (fun k g' => M.add k (adj g2'' k) g') (Mdomain g2'') g1 in
-(* Restore the edges from n and m. *)
-  S.fold (fun k g' => add_edge (b, k) g') nigh_m
-    (S.fold (fun k g' => add_edge (a, k) g') nigh_n g).
-
-(*doesn't add self-loops and preserves symmetry *)
+  let g_result := mk_art g1 g2' a n' in 
+  let m' := m' + snd (gr_rng g1) in
+  rename_node m' b g_result.
 
 (* articulation by 2 non adjacent points in one graph to build J *)
 
