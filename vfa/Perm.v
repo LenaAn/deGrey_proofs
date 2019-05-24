@@ -69,9 +69,6 @@ Print reflect.
      lemma like these next three:
 *)
 
-Check iff_reflect.
-Check beq_nat_true_iff.
-
 Lemma beq_reflect : forall x y, reflect (x = y) (x =? y).
 Proof.
   intros x y.
@@ -219,7 +216,6 @@ Proof. (* try again! *)
   apply H.
   apply le_trans with (k-3).
   Search (_ < _ -> _ <= _).
-  Print Nat.lt_le_incl.
   apply lt_le_weak.
   auto.
   apply le_minus.
@@ -353,10 +349,10 @@ Proof.
 
   (** This is where we left off before. Now, watch: *)
 
-  (* destruct (blt_reflect b a). *)  (* THIS LINE *)
+  destruct (blt_reflect b a).   (* THIS LINE *)
   (* Notice that [b<a] is above the line as a Prop, not a bool.
      Now, comment out THIS LINE, and uncomment THAT LINE.  *)
-   bdestruct (b <? a).    (* THAT LINE *) 
+  (* bdestruct (b <? a).    (* THAT LINE *) *)
   (* THAT LINE, with [bdestruct], does the same thing as THIS LINE. *)
 * (* case b<a *)
   simpl.
