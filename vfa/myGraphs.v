@@ -41,7 +41,7 @@ Compute (M.elements (color palette K3)).
 Compute S.min_elt (Mdomain K3).
 Compute 1%positive <? 2%positive.
 
-Fixpoint l_rng' (l : list node) (cur_min: node) (cur_max: node)  : node * node :=
+Fixpoint l_rng' (l : list node) (cur_min: node) (cur_max: node) : node * node :=
   match l with
   | nil => (cur_min, cur_max)
   | x :: xs  => let cur_min := if x <? cur_min then x else cur_min in
@@ -49,17 +49,10 @@ Fixpoint l_rng' (l : list node) (cur_min: node) (cur_max: node)  : node * node :
                 l_rng' (xs) (cur_min) (cur_max)
   end.
 
-Fixpoint l_rng (l : list node) : node * node :=
+Function l_rng (l : list node) :=
   match l with
-  | nil => (2%positive, 1%positive)
-  | x :: xs  => match xs with
-                | nil => (x, x)
-                | _ :: _ => let m' := fst (l_rng xs) in
-                            let M' := snd (l_rng xs) in
-                            let m := if x <? m' then x else m' in 
-                            let M := if M' <? x then x else M' in 
-                            (m, M)
-               end
+    | nil => (1%positive, 2%positive)
+    | x::xs =>  l_rng' l  x x
   end.
 
 Function gr_rng (g : graph) : node * node :=
@@ -104,20 +97,23 @@ Fixpoint delete_from_list (l: list node) (n: node) : list node :=
                 else h::(delete_from_list xs n)
   end.
 
+Compute delete_from_list [4; 3; 1; 2; 5] 6.
+
 (* n == len(before) *)
 Fixpoint sort (n: nat) (before: list node) (after: list node) : list node :=
   match n with
-    | O => nil
-    | S n' => 
+    | O => after
+    | S n' =>
         let min_value := fst (l_rng before) in 
         let before' := delete_from_list before min_value in 
-        sort n' before' after ++ [min_value]
+        sort n' before' ( after ++ [min_value] )
   end.
+
 
 Definition rename_in_order (g: graph) : graph :=
   let sorted_vertices := sort (length (S.elements (Mdomain g))) (S.elements (Mdomain g)) nil in 
-  fst ( fold_right
-        (fun n pair_g_next => 
+  fst ( fold_left
+        (fun pair_g_next n  => 
           let next_node := snd pair_g_next in
           let g' := fst pair_g_next in
           (
@@ -125,42 +121,52 @@ Definition rename_in_order (g: graph) : graph :=
             next_node+1 
           )
         )
-        (g, 1) sorted_vertices
+        sorted_vertices (g, 1) 
       ).
 
 
 Definition mk_art (g1 g2 : graph) (n : node) : graph :=
-(* Make graphs disjoint. *)
-  let g2' := rename_all (fun x => x + snd (gr_rng g1)) g2 in
-(* New name for the art. point. *)
-  let n' := n + snd (gr_rng g1) in
-(* Remember that point's neighborhood. *)
-  let nigh := adj g2' n' in
-(* Remove the new copy of the art. point (with edges). *)
-  let g2'' := remove_node n' g2' in
-(* Join both pieces. *)
-  let g := S.fold (fun m g' => M.add m (adj g2'' m) g') (Mdomain g2'') g1 in
-(* Restore the edges from the art. point. *)
-  let g := S.fold (fun m g' => add_edge (n, m) g') nigh g in
-  rename_in_order g.
-
-Definition mk_art' (g1 g2 : graph) (n : node) : graph :=
   let g2' := rename_all (fun x => x + snd(gr_rng g1)) g2 in
   let n' := n + snd(gr_rng g1) in
   let g := S.fold (fun m g' => M.add m (adj g2' m) g') (Mdomain g2') g1 in
   let g := rename_node n' n g in
   rename_in_order g.
 
-Compute gr_show (mk_art' K3 K3 3).
-Compute S.elements (Mdomain (mk_art' K3 K3 3)).
 
-Compute gr_show (mk_art K3 K3 3).
-Compute S.elements (Mdomain (mk_art K3 K3 3)).
+Compute gr_show (mk_art K3 K3 1).
+Compute S.elements (Mdomain (mk_art K3 K3 1)).
+
+
+Print Module S.
+
+
+Definition delete_edge (g: graph) (a b : node) : graph :=
+  let a_neigh := S.remove b (adj g a) in
+  let b_neigh := S.remove a (adj g b) in
+  M.add b b_neigh (M.add a a_neigh g).
+
+
+Definition mk_cmn_edge' (g1 g2 : graph) (a b n m : node) : graph :=
+(* Make graphs disjoint. *)
+  let g2' := rename_all (fun x => x + snd (gr_rng g1)) g2 in
+(* New names for the edge's vertices. *)
+  let n' := n + snd (gr_rng g1) in
+  let m' := m + snd (gr_rng g1) in
+ (* Delete adge from second graph *)
+  let g2' := delete_edge g2' n' m' in
+  let g_result := mk_art g1 g2'
+
+  
+
+  
+
+  
+
+
+
 
 (* Connect two graphs by identifying two edges. *)
-
 Definition mk_cmn_edge (g1 g2 : graph) (a b n m : node) : graph :=
-(* Make graphs disjoint. *)
   let g2' := rename_all (fun x => x + snd (gr_rng g1)) g2 in
 (* New names for the edge's vertices. *)
   let n' := n + snd (gr_rng g1) in
