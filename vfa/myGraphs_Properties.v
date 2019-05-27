@@ -134,6 +134,7 @@ split.
   discriminate.
 Qed.
 
+(*
 Lemma L_ok : graph_ok L.
 Proof.
 split.
@@ -144,6 +145,7 @@ split.
   clear HeqH'. apply edge_corr_1 in H. gr_destr H; gr_destr H';
   discriminate.
 Qed.
+*)
 
 
 Lemma add_edge_corr' : forall g x y a b,
@@ -183,60 +185,4 @@ apply WP.map_induction; intros.
 Admitted.
 
 
-(* Monochromatic triplet in H with center. *)
-
-Definition center (g : graph) (o : node) : Prop :=
-  forall i, S.In i (nodes g) -> i <> o -> is_edge g i o.
-
-Definition H_center (o : node) : Prop :=
-  (gr_deg H o) = 6%nat.
-
-Compute (gr_deg H 1).
-
-Lemma H_center_iff : forall o, center H o <-> o = 1.
-Proof.
-split; intro.
--  unfold center in H.
--  rewrite H. reflexivity.
-Qed.
-
-
-Check subset_nodes.
-
-Definition gr_deg_search (g : graph) (d : nat) : nodeset :=
-  subset_nodes (fun _ a => Nat.eqb (S.cardinal a) d) g.
-
-Compute S.elements (gr_deg_search H 0).
-
-Fixpoint gr_deg_sort (g : graph) (maxd : nat) : list (list node) :=
-  match maxd with
-  | 0%nat => [S.elements (gr_deg_search g 0)]
-  | S n => S.elements (gr_deg_search g maxd) :: gr_deg_sort g n
-  end.
-
-Compute gr_deg_sort H 6.
-
-
-Definition node_color (clr : coloring) (n : node) (c : S.elt) :=
-  M.find n clr = Some c.
-
-
-Definition monochrom (g : graph) (clr : coloring) (o l m n : node) :=
-  is_edge g o l /\ is_edge g o m /\ is_edge g o n /\ 
-   exists c, (node_color clr l c /\ node_color clr m c /\ node_color clr n c).
-
-
-
-Lemma H_monochrom_center : forall (plt : S.t) (clr : coloring) (o l m n : node),
-  coloring_ok plt H clr -> monochrom H clr o l m n -> H_center H o.
-
-
-
-Definition palette4: S.t := fold_right S.add S.empty [1; 2; 3; 4].
-
-Compute (M.elements (color palette H)).
-
-
 Close Scope positive.
-
-
