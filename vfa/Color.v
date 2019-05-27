@@ -56,10 +56,10 @@
    keys to [unit], where [None] means absent and [Some tt] means present; but their
    implementation is a bit more efficient. *)
 
-Require Import List.
-Require Import FSets.    (* Efficient functional sets *)
-Require Import FMaps.  (* Efficient functional maps *)
-From VFA Require Import Perm.   (* to use <? notation and [bdestruct] tactic *)
+Require Export List.
+Require Export FSets.    (* Efficient functional sets *)
+Require Export FMaps.  (* Efficient functional maps *)
+From VFA Require Export Perm.   (* to use <? notation and [bdestruct] tactic *)
 
 (** The nodes in our graph will be named by positive numbers.
   [FSets] and [FMaps] are interfaces for sets and maps over an element type.
@@ -282,7 +282,8 @@ Lemma Proper_eq_eq:
   forall f, Proper (E.eq ==> @eq bool) f.
 Proof.
 unfold Proper. unfold respectful.
-(* FILL IN HERE *) Admitted.
+intros. rewrite H. reflexivity.
+Qed.
 
 Lemma Sremove_elements:  forall (i: E.t) (s: S.t), 
   S.In i s -> 
@@ -293,9 +294,9 @@ intros.
 apply eqlistA_Eeq_eq.
 apply SortE_equivlistE_eqlistE.
 * (* To prove this one, [SearchAbout S.elements] *)
-(* FILL IN HERE *) admit.
+SearchAbout S.elements. apply S.elements_3.
 * (* Use [filter_sortE] to prove this one *)
-(* FILL IN HERE *) admit.
+apply filter_sortE. apply S.elements_3.
 *
 intro j.
 rewrite filter_InA; [ | apply Proper_eq_eq].
@@ -303,10 +304,25 @@ destruct (E.eq_dec j i).
 (* To prove this one, you'll need  S.remove_1, S.remove_2, S.remove_3,
     S.elements_1, S.elements_2. *)
  + (* j=i *)
-(* FILL IN HERE *) admit.
+ split; intro.
+  { apply S.elements_2 in H0.
+    apply S.remove_1 in H0. destruct H0.
+    symmetry. assumption.
+  }
+  { destruct H0; discriminate. }
  + (* j <> i *)
-(* FILL IN HERE *) admit.
-(* FILL IN HERE *) Admitted.
+  split; intro.
+  { apply S.elements_2 in H0.
+    split. apply S.elements_1. apply S.remove_3 in H0.
+    assumption. reflexivity.
+  }
+  { apply S.elements_1. apply S.remove_2.
+    { intro. destruct n. symmetry. assumption. }
+    { destruct H0 as [H0 _]. apply S.elements_2 in H0.
+      assumption.
+    }
+  }
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -324,9 +340,20 @@ Check M.elements. (*  : forall A : Type, M.t A -> list (positive * A) *)
 Lemma InA_map_fst_key:
  forall A j l, 
  InA E.eq j (map (@fst M.E.t A) l) <-> exists e, InA (@M.eq_key_elt A) (j,e) l.
-(* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros; induction l; simpl; split; intro.
+- inversion H.
+- destruct H. inversion H.
+- Print PositiveSet.InL. apply InA_cons in H. destruct H.
+  + exists (snd a). rewrite InA_cons. left. Print M.eq_key_elt.
+    split; simpl; [ assumption | reflexivity ].
+  + rewrite IHl in H. destruct H as [e H]. exists e.
+    rewrite InA_cons. right. assumption.
+- destruct H as [e H]. apply InA_cons in H. destruct H; rewrite InA_cons.
+  + left. destruct H. simpl in H. assumption.
+  + right. rewrite IHl. exists e. assumption.
+Qed.
 
+(** [] *)
 
 (** **** Exercise: 3 stars (Sorted_lt_key)  *)
 (** The function [M.lt_key] compares two elements of an [M.elements] list,
@@ -338,7 +365,8 @@ Lemma Sorted_lt_key:
   forall A (al: list (positive*A)), 
    Sorted (@M.lt_key A) al <->  Sorted E.lt (map (@fst positive A) al).
 Proof.
-(* FILL IN HERE *) Admitted.
+intros.
+Admitted.
 (** [] *)
 
 (* ================================================================= *)
