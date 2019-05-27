@@ -171,7 +171,6 @@ Definition H : graph :=
   rename_in_order (add_edge (2, snd (gr_rng g4)) g4).
 (* rename H *)
 
-
 Compute gr_show H.
 
 Definition HHH_H : graph :=

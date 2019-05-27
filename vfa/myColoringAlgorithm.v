@@ -18,7 +18,7 @@ Function make_state (c : coloring) (c_a: colors_available) : coloring_state :=
   pair c c_a.
 
 
-Definition low_deg' (K: nat) (n: node) (adj: nodeset) : bool := S.cardinal adj <? K.
+Definition low_deg (K: nat) (n: node) (adj: nodeset) : bool := S.cardinal adj <? K.
 
 Definition uncolored (f: coloring) (n: node) (adj: nodeset) : bool := match M.find n f with Some c => true | None => false end.
 
@@ -31,11 +31,7 @@ Defined.
 *)
 
 
-Print M.fold.
-
 Definition nodes' (g: graph) := Mdomain g.
-
-Check M.empty.
 
 Function make_full_colors_available (g: graph) (palette: S.t) : colors_available :=
   M.fold (fun n _ m => M.add n palette m) g (M.empty S.t).
@@ -55,7 +51,7 @@ Fuction unfold_option_state (c_s: coloring_state) : coloring_state  :=
   end. *)
 
 
-Function delete_color_from_neighbors(g: graph) (c_s: coloring_state) (n: node) : coloring_state :=
+Definition delete_color_from_neighbors(g: graph) (c_s: coloring_state) (n: node) : coloring_state :=
   match M.find n (coloring_of_state c_s) with
     | Some cur_color => 
         S.fold 
@@ -70,7 +66,7 @@ Function delete_color_from_neighbors(g: graph) (c_s: coloring_state) (n: node) :
   end.
 
 
-Function delete_color_from_neighbors'(g: graph) (c_a: colors_available) (n: node) 
+Definition delete_color_from_neighbors'(g: graph) (c_a: colors_available) (n: node) 
                                   (cur_color: node): colors_available :=
   S.fold 
     (fun vertex colors_now  => 
@@ -82,8 +78,7 @@ Function delete_color_from_neighbors'(g: graph) (c_a: colors_available) (n: node
     (adj g n) c_a.
 
 
-
-Function every_adj_of_node_has_available_colors (g:graph) (n:node) (c_a: colors_available) : bool :=
+Definition every_adj_of_node_has_available_colors (g:graph) (n:node) (c_a: colors_available) : bool :=
   S.fold 
   (fun n flag => if length (S.elements ( get_colors_av_of_vertex n c_a) ) =? 0 
     then false 
@@ -91,7 +86,7 @@ Function every_adj_of_node_has_available_colors (g:graph) (n:node) (c_a: colors_
   )
   (adj g n) true.
 
-Function every_adj_of_node_has_available_colors' (g:graph) (n:node) (c_s: coloring_state) : bool :=
+Definition every_adj_of_node_has_available_colors' (g:graph) (n:node) (c_s: coloring_state) : bool :=
   S.fold 
   (fun n flag => if length (S.elements ( get_colors_av_of_vertex n (c_a_of_state c_s) ) ) =? 0 
     then false 
@@ -99,7 +94,7 @@ Function every_adj_of_node_has_available_colors' (g:graph) (n:node) (c_s: colori
   )
   (adj g n) true.
 
-Function list_of_adj_of_node_with_one_color_available (g:graph) (n: node) (c_a: colors_available) : list node :=
+Definition list_of_adj_of_node_with_one_color_available (g:graph) (n: node) (c_a: colors_available) : list node :=
   S.fold 
   (fun n array => if length (S.elements ( get_colors_av_of_vertex n c_a) ) =? 1 
     then n:: array 
@@ -107,7 +102,7 @@ Function list_of_adj_of_node_with_one_color_available (g:graph) (n: node) (c_a: 
   )
   (adj g n) [].
 
-Function list_of_adj_of_node_with_one_color_available' (g:graph) (n: node) (c_s: coloring_state) : list node :=
+Definition list_of_adj_of_node_with_one_color_available' (g:graph) (n: node) (c_s: coloring_state) : list node :=
   S.fold 
   (fun n array => if length (S.elements ( get_colors_av_of_vertex n (c_a_of_state c_s) ) ) =? 1 
     then n:: array 
