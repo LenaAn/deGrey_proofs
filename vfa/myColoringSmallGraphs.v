@@ -84,12 +84,16 @@ Lemma adj_not_same_color :
   forall (a b : node) (clr: coloring) (plt : S.t) (g: graph),
     coloring_ok plt g clr ->
     (exists c, (node_color clr a c /\ node_color clr a c) ) -> ~ edge g a b.
+Proof.
+  Admitted.
 
 
 (* Why I need this?  *)
 (* Can't do this now *)
 Lemma H_monochrom_center : forall (plt : S.t) (clr : coloring) (o l m n : node),
   coloring_ok plt H clr -> monochrom H clr o l m n -> H_center o.
+Proof.
+  Admitted.
 
 
 Search ( _  In  ).
