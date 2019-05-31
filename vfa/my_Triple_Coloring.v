@@ -72,15 +72,17 @@ Ltac type1_tac h2 h3 h4 h5 := left; unfold type1_triple; split;
     unfold same_color; try rewrite <- h3; try rewrite <- h4; try rewrite <- h5;
     split; reflexivity.
 
-Ltac contr h0' h1 h2 h3 h4 h5 h6 c :=
+Ltac contr h0' h2 h3 h4 h5 c :=
   match goal with
   | [H2 : ?x = c 1, Hn : ?x = c ?n |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
+      let H1 := fresh in
+      let H6 := fresh in
       specialize (h0' 1 n);
       rewrite <- h5 in h0'; rewrite <- h2 in h0'; exfalso;
       assert (x <> x -> False);
       [> cbv; try intro; assert (x =x);
-      try reflexivity; apply h1; apply h6 |
-        apply h1; apply h0'; reflexivity ]
+      try reflexivity; apply H1; apply H6 |
+        apply H1; apply h0'; reflexivity ]
   | [ H3 : ?x = c 2, H4 : ?x = c 3, H5 : ?x = c 4  |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
       type1_tac h2 h3 h4 h5
   | [ H3 : ?x = c 2, H5 : ?x = c 4 |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
@@ -93,67 +95,47 @@ Ltac contr h0' h1 h2 h3 h4 h5 h6 c :=
       type3_tac h2 h3 h4 h5
   end.
 
+
+Ltac level3 h h0' h0 h2 h3 h4 c :=
+  lazymatch goal with
+  | [ H2 : ?x = c 1, H4 : ?x = c 3 |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
+    let Ha := fresh in
+      specialize (h0' 1 3);
+        rewrite <- h4 in h0'; rewrite <- h2 in h0'; exfalso;
+        assert (x <> x -> False);
+          [> cbv; intro Ha; assert (x = x) as H5 ;
+            [> try reflexivity |
+               apply Ha in H5; apply H5 ]
+            | apply Ha; apply h0'; reflexivity ]
+  | [ |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
+    remember h as H'''' eqn:HeqH'''' ; clear HeqH''''; specialize (H'''' 4); inversion H'''' as [H5|H5|H5|H5];
+        remember h0 as h0'' eqn:HeqH0' ; clear HeqH0';
+          contr h0'' h2 h3 h4 H5 c
+  end.
+
+
 Lemma coloring_triple:
   forall c: Coloring, is_good_coloring c T ->
   type1_triple c \/ type2_triple c \/ type3_triple c.
 Proof.
   intros. unfold is_good_coloring in H. unfold my_New_Coloring.is_coloring in H. destruct H.
-  remember H as H'. clear HeqH'. specialize (H' 1). inversion H';
-  remember H as H''; clear HeqH''; specialize (H'' 2); inversion H''.
-    remember H0 as H0'; clear HeqH0'.
-    specialize (H0' 1 2);
-    rewrite <- H3 in H0'; rewrite <- H2 in H0'; exfalso;
-    assert (1 <> 1 -> False); cbv; try intro; assert (1 =1);
-    try reflexivity; try apply H1 in H4; try assumption;
-    apply H1; apply H0'; reflexivity.
-  remember H as H'''; clear HeqH'''. specialize (H''' 3). inversion H'''.
-    remember H0 as H0'; clear HeqH0'.
-    specialize (H0' 1 3).
-    rewrite <- H4 in H0'. rewrite <- H2 in H0'. exfalso.
-    assert (1 <> 1 -> False); cbv. try intro. assert (1 =1).
-    try reflexivity; apply H1 in H5. apply H1. apply H5.
-    apply H1. apply H0'. reflexivity.
-  remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-    remember H0 as H0'; clear HeqH0';
-      contr H0' H1 H2 H3 H4 H5 H6 c.
-  - remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-    remember H0 as H0'; clear HeqH0';
-      contr H0' H1 H2 H3 H4 H5 H6 c.
-  - remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-    remember H0 as H0'; clear HeqH0';
-      contr H0' H1 H2 H3 H4 H5 H6 c.
-  - remember H as H'''; clear HeqH'''; specialize (H''' 3). inversion H'''.
-    remember H0 as H0'; clear HeqH0'.
-    specialize (H0' 1 3).
-    rewrite <- H4 in H0'. rewrite <- H2 in H0'. exfalso.
-    assert (1 <> 1 -> False); cbv. try intro. assert (1 =1).
-    try reflexivity; apply H1 in H5. apply H1. apply H5.
-    apply H1. apply H0'. reflexivity.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
+  remember H as H'. clear HeqH'. specialize (H' 1). inversion H'.
+  - remember H as H''; clear HeqH''; specialize (H'' 2); inversion H''.
+    + remember H0 as H0'; clear HeqH0'.
+      specialize (H0' 1 2).
+      rewrite <- H3 in H0'; rewrite <- H2 in H0'; exfalso;
+      assert (1 <> 1 -> False); cbv; try intro; assert (1 =1);
+      try reflexivity; try apply H1 in H4; try assumption;
+      apply H1; apply H0'; reflexivity.
+    + remember H as H'''; clear HeqH'''. specialize (H''' 3). inversion H''';
+      remember H0 as H0' eqn:HeqH0' ; clear HeqH0';
+        level3 H H0' H0 H2 H3 H4 c.
+    + remember H as H'''; clear HeqH'''; specialize (H''' 3). inversion H''';
       remember H0 as H0'; clear HeqH0';
-        contr H0' H1 H2 H3 H4 H5 H6 c.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
+        level3 H H0' H0 H2 H3 H4 c.
+    + remember H as H'''; clear HeqH'''; specialize (H''' 3). inversion H''';
       remember H0 as H0'; clear HeqH0';
-        contr H0' H1 H2 H3 H4 H5 H6 c.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-      remember H0 as H0'; clear HeqH0';
-        contr H0' H1 H2 H3 H4 H5 H6 c.
-  - remember H as H'''; clear HeqH'''; specialize (H''' 3). inversion H'''.
-    remember H0 as H0'; clear HeqH0'.
-    specialize (H0' 1 3).
-    rewrite <- H4 in H0'. rewrite <- H2 in H0'. exfalso.
-    assert (1 <> 1 -> False); cbv. try intro. assert (1 =1).
-    try reflexivity; apply H1 in H5. apply H1. apply H5.
-    apply H1. apply H0'. reflexivity.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-      remember H0 as H0'; clear HeqH0';
-      contr H0' H1 H2 H3 H4 H5 H6 c.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-      remember H0 as H0'; clear HeqH0';
-        contr H0' H1 H2 H3 H4 H5 H6 c.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
-      remember H0 as H0'; clear HeqH0';
-        contr H0' H1 H2 H3 H4 H5 H6 c.
+        level3 H H0' H0 H2 H3 H4 c.
   - (* We saw every variant with c 1 = 1, that should be enough *) Admitted.
 
 
