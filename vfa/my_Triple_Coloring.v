@@ -89,7 +89,7 @@ Ltac contr h0' h1 h2 h3 h4 h5 h6 c :=
       type2_tac_right h2 h3 h4 h5
   | [ H3 : ?x = c 2, H4 : ?x = c 3 |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
       type2_tac_left h2 h3 h4 h5
-  | [ |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
+  | [ H2 : ?x = c 1, H3 : ?y = c 2, H4 : ?z = c 3, H5 : ?w = c 4 |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
       type3_tac h2 h3 h4 h5
   end.
 
@@ -113,12 +113,9 @@ Proof.
     assert (1 <> 1 -> False); cbv. try intro. assert (1 =1).
     try reflexivity; apply H1 in H5. apply H1. apply H5.
     apply H1. apply H0'. reflexivity.
-  remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H''''.
-    remember H0 as H0'; clear HeqH0'.
-  - contr H0' H1 H2 H3 H4 H5 H6 c.
-  - contr H0' H1 H2 H3 H4 H5 H6 c.
-  - contr H0' H1 H2 H3 H4 H5 H6 c.
-  - contr H0' H1 H2 H3 H4 H5 H6 c.
+  remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
+    remember H0 as H0'; clear HeqH0';
+      contr H0' H1 H2 H3 H4 H5 H6 c.
   - remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
     remember H0 as H0'; clear HeqH0';
       contr H0' H1 H2 H3 H4 H5 H6 c.
@@ -148,12 +145,9 @@ Proof.
     assert (1 <> 1 -> False); cbv. try intro. assert (1 =1).
     try reflexivity; apply H1 in H5. apply H1. apply H5.
     apply H1. apply H0'. reflexivity.
-    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H''''.
-      remember H0 as H0'; clear HeqH0'.
-      * contr H0' H1 H2 H3 H4 H5 H6 c.
-      * contr H0' H1 H2 H3 H4 H5 H6 c.
-      * contr H0' H1 H2 H3 H4 H5 H6 c.
-      * contr H0' H1 H2 H3 H4 H5 H6 c.
+    + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
+      remember H0 as H0'; clear HeqH0';
+      contr H0' H1 H2 H3 H4 H5 H6 c.
     + remember H as H''''; clear HeqH''''; specialize (H'''' 4). inversion H'''';
       remember H0 as H0'; clear HeqH0';
         contr H0' H1 H2 H3 H4 H5 H6 c.
