@@ -8,11 +8,6 @@ From VFA Require Import my_New_Coloring.
 Open Scope positive.
 
 
-(*
-Inductive triple (center: node) (border: list node) (g: graph) : Prop :=
-  | mk_trip: node -> list node -> graph -> triple center border g.
-*)
-
 (* Monochromatic *)
 Definition type1_triple (c: Coloring) :=
   let c1 := c 1 in
@@ -39,13 +34,6 @@ Definition type3_triple (c: Coloring) :=
 
 Definition T := (add_edge 1 2 (add_edge 1 3 (add_edge 1 4 EmptyGraph ) ) ).
 
-
-Ltac brute_color c H H_good num :=
-  try lazymatch goal with
-      | [ Hy : ?x = c ?y, Hz : ?x = c ?z |- _] =>
-          contradiction (H_good y z); [simpl | rewrite <- Hy ; rewrite <- Hz]; reflexivity
-      | [ |- _] => let Cc := fresh "C" in pose proof (H num) as Cc; inversion Cc; brute_color c H H_good (inc num)
-      end.
 
 Ltac type2_tac_left h2 h3 h4 h5 := right; left; unfold type2_triple;
     rewrite <- h2; rewrite <- h3; rewrite <- h4; rewrite <- h5;
@@ -97,7 +85,7 @@ Ltac contr h0' h2 h3 h4 h5 c :=
 
 
 Ltac level3 h h0' h0 h2 h3 h4 c :=
-  lazymatch goal with
+  match goal with
   | [ H2 : ?x = c 1, H4 : ?x = c 3 |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
     let Ha := fresh in
       specialize (h0' 1 3);
@@ -108,9 +96,26 @@ Ltac level3 h h0' h0 h2 h3 h4 c :=
                apply Ha in H5; apply H5 ]
             | apply Ha; apply h0'; reflexivity ]
   | [ |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
-    remember h as H'''' eqn:HeqH'''' ; clear HeqH''''; specialize (H'''' 4); inversion H'''' as [H5|H5|H5|H5];
+    remember h as H'''' eqn:HeqH'''' ; clear HeqH''''; specialize (H'''' (3+1)); inversion H'''' as [H5|H5|H5|H5];
         remember h0 as h0'' eqn:HeqH0' ; clear HeqH0';
-          contr h0'' h2 h3 h4 H5 c
+           contr  h0'' h2 h3 h4 H5 c
+  end.
+
+Ltac level2 h h0' h0 h2 h3 c :=
+  match goal with
+  | [ H2 : ?x = c 1, H4 : ?x = c 2 |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
+    let Ha := fresh in
+      specialize (h0' 1 2);
+        rewrite <- h3 in h0'; rewrite <- h2 in h0'; exfalso;
+        assert (x <> x -> False);
+          [> cbv; intro Ha; assert (x = x) as H5 ;
+            [> try reflexivity |
+               apply Ha in H5; apply H5 ]
+            | apply Ha; apply h0'; reflexivity ]
+  | [ |- type1_triple _ \/ type2_triple _ \/ type3_triple _] =>
+    remember h as H''' eqn:HeqH''' ; clear HeqH'''; specialize (H''' (2+1)); inversion H''' as [H4|H4|H4|H4];
+        remember h0 as Ha eqn:HeqH0 ; clear HeqH0;
+           level3 h Ha h0 h2 h3 H4 c
   end.
 
 
@@ -119,24 +124,10 @@ Lemma coloring_triple:
   type1_triple c \/ type2_triple c \/ type3_triple c.
 Proof.
   intros. unfold is_good_coloring in H. unfold my_New_Coloring.is_coloring in H. destruct H.
-  remember H as H'. clear HeqH'. specialize (H' 1). inversion H'.
-  - remember H as H''; clear HeqH''; specialize (H'' 2); inversion H''.
-    + remember H0 as H0'; clear HeqH0'.
-      specialize (H0' 1 2).
-      rewrite <- H3 in H0'; rewrite <- H2 in H0'; exfalso;
-      assert (1 <> 1 -> False); cbv; try intro; assert (1 =1);
-      try reflexivity; try apply H1 in H4; try assumption;
-      apply H1; apply H0'; reflexivity.
-    + remember H as H'''; clear HeqH'''. specialize (H''' 3). inversion H''';
-      remember H0 as H0' eqn:HeqH0' ; clear HeqH0';
-        level3 H H0' H0 H2 H3 H4 c.
-    + remember H as H'''; clear HeqH'''; specialize (H''' 3). inversion H''';
-      remember H0 as H0'; clear HeqH0';
-        level3 H H0' H0 H2 H3 H4 c.
-    + remember H as H'''; clear HeqH'''; specialize (H''' 3). inversion H''';
-      remember H0 as H0'; clear HeqH0';
-        level3 H H0' H0 H2 H3 H4 c.
-  - (* We saw every variant with c 1 = 1, that should be enough *) Admitted.
+  remember H as H'. clear HeqH'. specialize (H' 1). inversion H';
+    remember H as H''; clear HeqH''; specialize (H'' 2); inversion H''; remember H0 as H0'; clear HeqH0';
+    level2 H H0' H0 H2 H3 c.
+Qed.
 
 
 Close Scope positive.
