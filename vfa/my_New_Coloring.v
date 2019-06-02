@@ -3,12 +3,7 @@ Require Export Coq.Lists.List.
 Require Export Coq.Lists.ListSet.
 Require Export Coq.Numbers.BinNums.
 Export ListNotations.
-
-Definition eq_dec : forall x y : positive, {x = y} + {x <> y}.
-  decide equality.
-Defined.
-
-Print eq_dec.
+From VFA Require Import Color.
 
 Definition Coloring := positive -> positive.
 Definition same_color (c : Coloring) (u v : positive) : Prop := c u = c v.
@@ -22,16 +17,8 @@ Inductive is_color : positive -> Prop :=
 
 Definition is_coloring (c : Coloring) := forall x : positive, is_color (c x).
 
+Definition is_good_coloring (c : Coloring) (g : graph) :=
+  is_coloring c /\ forall x y : positive, S.In y (adj g x) -> c x <> c y.
 
-Definition Graph := positive -> set positive.
-Definition EmptyGraph : Graph := fun (x : positive) => (empty_set positive).
-Definition add_edge (u v : positive) (g : Graph) : Graph := fun (x : positive) =>
-  if beq_pos x u then set_add eq_dec v (g u) else
-    if beq_pos x v then set_add eq_dec u (g v) else
-      g x.
-
-Definition is_good_coloring (c : Coloring) (g : Graph) :=
-  is_coloring c /\ forall x y : positive, set_mem eq_dec y (g x) = true -> c x <> c y.
-
-Definition is_colorable (g : Graph) :=
+Definition is_colorable (g : graph) :=
   exists c : Coloring, is_good_coloring c g.
