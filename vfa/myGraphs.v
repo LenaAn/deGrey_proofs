@@ -1,16 +1,13 @@
-Print LoadPath.
-
-From VFA Require Import Color.
 From VFA Require Import Perm.
+From VFA Require Import Color.
 
 Open Scope positive.
 
-Definition palette: S.t := fold_right S.add S.empty [1; 2; 3].
-
+(*
 Definition add_edge (e: (E.t*E.t)) (g: graph) : graph :=
  M.add (fst e) (S.add (snd e) (adj g (fst e))) 
   (M.add (snd e) (S.add (fst e) (adj g (snd e))) g).
-
+*)
 Definition add_edges (el: list (E.t*E.t)) (g: graph) : graph :=
   fold_right add_edge g el.
 
@@ -22,24 +19,11 @@ Definition G :=
 
 Compute (S.elements (Mdomain G)). (* = [4; 2; 6; 1; 5] *)
 
-Compute (M.elements (color palette G)). (* = [(4, 1); (2, 3); (6, 2); (1, 2); (5, 1)] *)
-
-(** That is our graph coloring:  Node [4] is colored with color [1], node [2] with color [3],
-  nodes [6] and [1] with [2], and node [5] with color [1]. *)
-
-
-Definition palette4: S.t := fold_right S.add S.empty [1; 2; 3; 4].
-
 
 Definition K3 := 
     mk_graph [ (1, 2) ; (2, 3); (1, 3)].
 
-Compute (S.elements (Mdomain K3)). 
-
-Compute (M.elements (color palette K3)).
-
-Compute S.min_elt (Mdomain K3).
-Compute 1%positive <? 2%positive.
+Compute (S.elements (Mdomain K3)).
 
 Fixpoint l_rng' (l : list node) (cur_min: node) (cur_max: node) : node * node :=
   match l with
@@ -83,8 +67,6 @@ Compute gr_show (rename_all (fun x => x * 4) K3).
 
 (* Connect two graphs by an articulation point (aka "sharnir").
   That point MUST be present in both graphs. *)
-
-Check S.remove.
 
 Compute gr_rng K3.
 
@@ -135,9 +117,6 @@ Compute gr_show (mk_art K3 K3 1 2).
 Compute S.elements (Mdomain (mk_art K3 K3 1 1)).
 
 
-Print Module S.
-
-
 Definition delete_edge (g: graph) (a b : node) : graph :=
   let a_neigh := S.remove b (adj g a) in
   let b_neigh := S.remove a (adj g b) in
@@ -169,17 +148,8 @@ Definition H : graph :=
   let g3 := rename_in_order (mk_cmn_edge g2 K3 1 (snd (gr_rng g2)) 1 3) in
   let g4 := rename_in_order (mk_cmn_edge g3 K3 1 (snd (gr_rng g3)) 1 3) in
   rename_in_order (add_edge (2, snd (gr_rng g4)) g4).
-(* rename H *)
 
 Compute gr_show H.
-
-Definition HHH_H : graph :=
-  let HH := mk_cmn_edge H H 2 3 6 7 in
-  let HH_H := mk_cmn_edge HH H 7 2 6 7 in
-  let HHH := rename_node 14 12 HH_H in
-  mk_cmn_edge HHH H 6 7 6 7.
-
-Compute gr_show HHH_H.
 
 
 Definition J: graph :=
@@ -200,8 +170,6 @@ Definition J: graph :=
 (* Centers: 1, 8, 13, 17, 21, 25, 29 *)
 (* Linking vertices: 9, 12, 16, 20, 24, 28 *)
 
-
-(* Works ~ 20 min *)
 Compute gr_show J.
 
 
