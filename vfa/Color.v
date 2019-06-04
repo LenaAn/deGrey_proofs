@@ -365,8 +365,23 @@ Lemma Sorted_lt_key:
   forall A (al: list (positive*A)), 
    Sorted (@M.lt_key A) al <->  Sorted E.lt (map (@fst positive A) al).
 Proof.
-intros.
-Admitted.
+induction al.
+- simpl. split; intro; apply Sorted_nil.
+- simpl. split; intro; apply Sorted_cons.
+  + rewrite <- IHal. apply Sorted_inv in H. tauto.
+  + apply Sorted_inv in H. destruct H as [_ H].
+    unfold M.lt_key in H. destruct al.
+    * constructor.
+    * simpl in *. constructor. inversion H. assumption.
+  + apply Sorted_inv in H. destruct H as [H _].
+    rewrite <-IHal in H. assumption.
+  + apply Sorted_inv in H. destruct H as [_ H].
+    unfold M.lt_key. destruct al.
+    * constructor.
+    * constructor. simpl in H. inversion H. assumption.
+Qed.
+
+
 (** [] *)
 
 (* ================================================================= *)
@@ -380,7 +395,7 @@ Admitted.
 Lemma cardinal_map:  forall A B (f: A -> B) g, 
      M.cardinal (M.map f g) = M.cardinal g.
 
-(** Hint:  To prove this theorem, I used these lemmas.  
+(** Hint:  To prove this theorem, I used these lemmas.
      You might find a different way. *)
 
 Check M.cardinal_1.
@@ -394,7 +409,14 @@ Check InA_map_fst_key.
 Check WF.map_mapsto_iff.
 Check Sorted_lt_key.
 
-(* FILL IN HERE *) Admitted.
+intros. rewrite M.cardinal_1.
+
+remember (M.elements (M.map f g)) as l.
+induction l.
+- symmetry in Heql. rewrite <- WP.elements_Empty in Heql.
+  apply WP.cardinal_Empty in Heql.
+  Search M.map.
+Admitted.
 (** [] *)
 
 (** **** Exercise: 4 stars (Sremove_cardinal_less)  *)
@@ -405,7 +427,12 @@ intros.
 repeat rewrite S.cardinal_1.
 generalize (Sremove_elements _ _ H); intro.
 rewrite H0; clear H0.
-(* FILL IN HERE *) Admitted.
+remember (S.elements s) as l. induction l.
+- simpl. apply S.elements_1 in H. rewrite <- Heql in H.
+  inversion H.
+- simpl. destruct (E.eq_dec a i).
+Admitted.
+
 (** [] *)
 
 
@@ -474,18 +501,68 @@ Lemma Mremove_cardinal_less: forall A i (s: M.t A), M.In i s ->
 Lemma fold_right_rev_left:
   forall (A B: Type) (f: A -> B -> A) (l: list B) (i: A),
   fold_left f l i = fold_right (fun x y => f y x) i (rev l).
-(* FILL IN HERE *) Admitted.
+Proof.
+induction l; intros; simpl.
+- reflexivity.
+- rewrite fold_right_app. simpl. apply IHl.
+Qed.
 
 Lemma Snot_in_empty: forall n, ~ S.In n S.empty.
-(* FILL IN HERE *) Admitted.
+Proof.
+repeat intro. apply S.elements_1 in H. inversion H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (Sin_domain)  *)
+Definition eqE (s1 s2 : S.t) := forall x, S.In x s1 <-> S.In x s2.
+
 Lemma Sin_domain: forall A n (g: M.t A), S.In n (Mdomain g) <-> M.In n g.
-
 (** This seems so obvious!  But I didn't find a really simple proof of it. *)
+Proof.
+intros. pattern g. remember
+ (fun t : M.t A => S.In n (Mdomain t) <-> M.In n t) as P.
+apply WP.map_induction. rewrite HeqP; intros.
+- unfold Mdomain. rewrite WP.fold_Empty; try auto. split; intro.
+  + inversion H0.
+  + rewrite M.Empty_alt in H. apply WP.F.in_find_iff in H0.
+    destruct H0. apply H.
+- rewrite HeqP. intros. unfold Mdomain in *. remember
+     (fun (n : M.key) (_ : A) (s : S.t) => S.add n s) as f.
+    Check WP.fold_Add. remember H1 as H3. clear HeqH3.
+    apply WP.fold_Add with (k:=x) (f:=f) (i:=S.empty) (eqA := eqE) in H1.
+    + unfold eqE in H1. rewrite H1, Heqf, S.add_spec.
+      assert (H6 : x = n \/ x <> n).
+       { destruct (Pos.lt_total x n) as [? | [? | ?]];
+         try (right; intro; rewrite H4 in H2; destruct (Pos.lt_irrefl n);
+         assumption). tauto. } destruct H6; rewrite WF.in_find_iff; rewrite H3;
+         split; intros.
+      * intro. Print WP.Add. apply WP.F.add_eq_o with (m := m) (e := e) in H2.
+        rewrite H5 in H2. discriminate.
+      * tauto.
+      * destruct H4; try contradiction. 
+        apply WP.F.add_neq_o with (m := m) (e := e) in H2.
+        rewrite Heqf in H. rewrite H in H4. apply WP.F.in_find_iff in H4.
+        rewrite <-H2 in H4. assumption.
+      * right. apply WP.F.add_neq_o with (m := m) (e := e) in H2. 
+        rewrite Heqf in H. rewrite H. apply WP.F.in_find_iff.
+        rewrite H2 in H4. assumption.
+    + unfold eqE. split.
+      { unfold Reflexive. intros. reflexivity. }
+      { unfold Symmetric. intros. split; intro; apply H2; assumption. }
+      { unfold Transitive. intros. split; intro.
+        { apply H2 in H5. apply H4 in H5. assumption. }
+        { apply H4 in H5. apply H2 in H5. assumption. }
+      }
+    + unfold Proper, respectful, eqE. intros. subst. split; 
+      repeat rewrite S.add_spec; intro; destruct H2; try tauto;
+      right; apply H5; assumption.
+    + unfold WP.transpose_neqkey, eqE. intros. rewrite Heqf.
+      repeat rewrite S.add_spec. tauto.
+    + assumption.
+Qed.
 
-(* FILL IN HERE *) Admitted.
+
+
 (** [] *)
 
 (* ################################################################# *)
@@ -605,7 +682,7 @@ Local Open Scope positive.
 Definition palette: S.t := fold_right S.add S.empty [1; 2; 3].
 
 Definition add_edge (e: (E.t*E.t)) (g: graph) : graph :=
- M.add (fst e) (S.add (snd e) (adj g (fst e))) 
+ M.add (fst e) (S.add (snd e) (adj g (fst e)))
   (M.add (snd e) (S.add (fst e) (adj g (snd e))) g).
 
 Definition mk_graph (el: list (E.t*E.t)) :=

@@ -55,6 +55,7 @@ Function gr_show (g : graph) : list (node * node) :=
 
 
 Compute gr_show K3.
+
 Compute gr_show (rename_node 3 1 (rename_node 2 7 (rename_node 1 5 K3))).
 Compute S.elements (Mdomain (rename_node 3 1 (rename_node 2 7 (rename_node 1 5 K3)))).
 
