@@ -16,6 +16,7 @@ Definition edgeb (g : graph) (n m : node) :=
 Definition edge (g : graph) (n m : node) :=
   S.In n (adj g m).
 
+
 Lemma adj_M_In : forall g n m,
   S.In m (adj g n) -> M.In n g.
 Proof. intros. unfold adj in H.
@@ -24,7 +25,7 @@ destruct (M.find n g) eqn: H1.
   exists n0. assumption.
 - discriminate.
 Qed.
-
+(*
 Check M.fold.
 
 (* Dual to Mdomain and nodes. *)
@@ -48,14 +49,14 @@ Proof.
 intros. unfold graph_ok, no_selfloop in H. destruct H as [_ H].
 unfold edge. apply H.
 Qed.
-
+*)
 (* The weak vesrions independent of symmetry *)
 Lemma edge_corr_1 : forall g n m, edge g n m -> S.In m (nodes g).
 Proof.
 intros. unfold nodes. rewrite Sin_domain.
 apply adj_M_In with n. unfold edge in H. assumption.
 Qed.
-
+(*
 (*
 Lemma edge_corr_2 : forall g n m, edge g n m -> S.In n (conodes g).
 Proof.
@@ -77,19 +78,25 @@ Qed.
   But we HAVE TO bound the qunatifiers on graph nodes.
 *)
 
+*)
 Require Export List.
 Require Export Sorted.
 Require Export Setoid Basics Morphisms.
+
+Ltac gr_destr h :=   apply S.elements_1 in h; compute in h;
+  repeat rewrite InA_cons in h; rewrite InA_nil in h;
+  repeat destruct h as [? | h]; try inversion h; subst.
+
 
 Lemma K3_ok : graph_ok K3.
 Proof. split.
 - unfold undirected. intros. remember H as H'.
   clear HeqH'. apply edge_corr_1 in H.
-(* Here lies the truth! *)
-  Ltac gr_destr h :=   apply S.elements_1 in h; compute in h;
-  repeat rewrite InA_cons in h; rewrite InA_nil in h;
-  repeat destruct h as [? | h]; try inversion h; subst.
-  gr_destr H; gr_destr H'; reflexivity.
+  apply S.elements_1 in H. compute in H.
+  repeat rewrite InA_cons in H. rewrite InA_nil in H.
+  repeat destruct h as [? | h]. try inversion H. subst.
+
+gr_destr H; gr_destr H'; reflexivity.
 
 - unfold no_selfloop. repeat intro. remember H as H'.
   clear HeqH'. apply edge_corr_1 in H. gr_destr H; gr_destr H';
@@ -106,10 +113,6 @@ split.
   clear HeqH'. apply edge_corr_1 in H. gr_destr H; gr_destr H';
   discriminate.
 Qed.
-
-(* Ltac gr_test_ok := split; [ unfold undirected | unfold no_selfloop ];
-  repeat intro; remember H as H'; clear HeqH'; apply edge_corr_1 in H;
-   gr_destr H; gr_destr H'; [ reflexivity | discriminate ]. *)
 
 Lemma J_ok : graph_ok J.
 Proof.
@@ -218,36 +221,6 @@ try (right; intro; rewrite H0 in H; destruct (Pos.lt_irrefl y);
          assumption); tauto.
 Qed.
 
-(* 
-Lemma delete_edge_corr' : forall g x y a b,
-  edge (delete_edge g a b) x y <-> edge g x y /\ ~(x = a /\ y = b)
-   /\ ~(x = b /\ y = a).
-Proof.
-intros. pattern g. remember (fun g0 : graph =>
- edge (delete_edge g0 a b) x y <->  edge g0 x y /\ ~ (x = a /\ y = b) /\
- ~ (x = b /\ y = a)) as P. apply WP.map_induction; intros; rewrite HeqP;
-   clear HeqP; split; intro.
-- unfold delete_edge, edge, adj in *. rewrite M.Empty_alt in H.
-  destruct (pos_eq_dec b y); destruct (pos_eq_dec a y).
-  destruct (M.find y m) eqn:Hmf; rewrite H in *; try discriminate.
-  + rewrite WP.F.add_eq_o in H0. apply S.mem_1 in H0. simpl in H0.
-    discriminate. assumption.
-  + rewrite WP.F.add_eq_o, H  in H0. apply S.mem_1 in H0.
-    simpl in H0. discriminate. assumption.
-  + rewrite WP.F.add_neq_o, WP.F.add_eq_o, H in H0; try assumption.
-    apply S.mem_1 in H0. simpl in H0. discriminate.
-  + do 2 rewrite WP.F.add_neq_o in H0; try assumption. rewrite H in H0.
-    apply S.mem_1 in H0. simpl in H0. discriminate.
-- unfold delete_edge, edge, adj in *. rewrite M.Empty_alt in H.
-  destruct (pos_eq_dec b y); destruct (pos_eq_dec a y);
-  repeat rewrite H in *; try discriminate; try rewrite H in H0;
-  destruct H0 as [H0 _]; apply S.mem_1 in H0; simpl in H0; discriminate.
-- unfold delete_edge, edge, adj in *. destruct (pos_eq_dec b y);
-  destruct (pos_eq_dec a y); do 2 rewrite H1 in *; destruct (pos_eq_dec b x0);
-  destruct (pos_eq_dec a x0).
-  + do 2 rewrite WP.F.add_eq_o in H2; try assumption.
-Admitted.
-*)
 
 (* Monochromatic triplet in H with center. *)
 

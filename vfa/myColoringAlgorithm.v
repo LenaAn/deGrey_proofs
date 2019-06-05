@@ -1,26 +1,27 @@
 From VFA Require Import Color.
 (* Require Import Color. *)
 From VFA Require Import Perm.
+From VFA Require Import my_New_Coloring.
 
 (** * My Coloring *)
 
 Definition colors_available := M.t S.t.
 
-Definition coloring_state := prod coloring colors_available.
+Definition coloring_state := prod Coloring colors_available.
 
-Definition coloring_of_state (c_s: coloring_state) : coloring :=
+Definition coloring_of_state (c_s: coloring_state) : Coloring :=
   fst c_s.
 
 Definition c_a_of_state (c_s: coloring_state) : colors_available :=
   snd c_s.
 
-Function make_state (c : coloring) (c_a: colors_available) : coloring_state :=
+Function make_state (c : Coloring) (c_a: colors_available) : coloring_state :=
   pair c c_a.
 
 
 Definition low_deg (K: nat) (n: node) (adj: nodeset) : bool := S.cardinal adj <? K.
 
-Definition uncolored (f: coloring) (n: node) (adj: nodeset) : bool := match M.find n f with Some c => true | None => false end.
+Definition uncolored (f: Coloring) (n: node) (adj: nodeset) : bool := match M.find n f with Some c => true | None => false end.
 
 (* Choose any uncolored vertex *)
 Function get_next (g: graph) (f: coloring) : option node :=
