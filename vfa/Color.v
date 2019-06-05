@@ -625,7 +625,7 @@ Function select (K: nat) (g: graph) {measure M.cardinal g}: list node :=
 Proof. apply select_terminates. 
 Defined.  (* Do not use Qed on a Function, otherwise it won't Compute! *)
 
-Definition coloring := M.t node.
+Definition coloring := M.t positive.
 
 Definition colors_of (f: coloring) (s: S.t) : S.t := 
    S.fold (fun n s => match M.find n f with Some c => S.add c s | None => s end) s S.empty.

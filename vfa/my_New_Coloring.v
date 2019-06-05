@@ -44,7 +44,7 @@ Definition is_good_coloring (c : Coloring) (g : graph) :=
 Definition is_colorable (g : graph) :=
   exists c : Coloring, is_good_coloring c g.
 
-Definition t_update (c : Coloring) (n : node) (clr : positive) :=
+Definition update_coloring (c : Coloring) (n : node) (clr : positive) :=
   fun x' => if n =? x' then clr else c x'.
 
 Close Scope positive.
