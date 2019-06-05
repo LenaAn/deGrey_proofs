@@ -2,8 +2,6 @@
 %============================================================================================================================
 
 
-\chapter{Построение графов через реализацию графа на плоскости}
-
 \chapter{Реализация графа в Coq}
 
 \section{Представление графов в Coq}
@@ -48,7 +46,7 @@ Definition K3 :=
     mk_graph [ (1, 2) ; (2, 3); (1, 3)].
 \end{verbatim}
 
-Далее для работы с графом можно использовать функцию вывода множества вершин и функцию вывода множества ребер.
+Далее для работы с графом можно использовать функцию вывода множества вершин и функцию {\tt gr\_show} вывода множества ребер.
 \begin{verbatim}
 Compute (S.elements (Mdomain K3)).
 (* 
@@ -72,62 +70,129 @@ Compute gr_show K3.
 *)
 \end{verbatim}
 
-Граф H построен на основе графа {\tt K3} с помощью нескольких вспомогательных функций.
+Для построения графов разработаны несколько вспомогательных функций.
 
+Рекурсивная функция {\tt l\_rng} находит минимум и максимум в списке, функция {\tt gr\_rng} находит в графе минимальный и максимальный номера вершин. Функция {\tt rename\_all} принимает на вход граф {\tt G} и функцию {\tt f} из номеров вершин в номера вершин и выдает граф, полученный применением {\tt f} к вершинам графа {\tt G}. Функция {\tt delete\_edge} удаляет ребро из графа, а функция {\tt rename\_in\_order} переименовывает вершины графа в отрезок от $1$ до количества вершин, сохраняя при этом из порядок.
 
-Рекурсивная функция {\tt l\_rng} находит минимум и максимум в списке, функция {\tt gr\_rng} находит в графе минимальный и максимальный номера вершин.
+Основные функции, использующиеся для построения графов -- это {\tt mk\_art}, которая соединяет два графа по вершине, {\tt mk\_cmn\_edge}, которая соединяет два графа по ребру и {\tt add\_edges}, которая добавляет ребра в граф.
+
+В терминах описанных функций конструкция графа {\tt H} на основе графа {\tt K3} выглядит следующим образом:
 
 \begin{verbatim}
-Fixpoint l_rng' (l : list node) (cur_min: node) (cur_max: node) : 
-    node * node :=
-  match l with
-  | nil => (cur_min, cur_max)
-  | x :: xs  => 
-        let cur_min := if x <? cur_min then x else cur_min in
-        let cur_max := if cur_max <? x then x else cur_max in
-        l_rng' (xs) (cur_min) (cur_max)
-  end.
-
-Function l_rng (l : list node) :=
-  match l with
-    | nil => (1%positive, 2%positive)
-    | x::xs =>  l_rng' l  x x
-  end.
-
-Function gr_rng (g : graph) : node * node :=
-  l_rng (S.elements (Mdomain g)).
+Definition H : graph := 
+  let g1 := rename_in_order (mk_cmn_edge K3 K3 1 3 1 3) in
+  let g2 := rename_in_order 
+                (mk_cmn_edge g1 K3 1 (snd (gr_rng g1)) 1 3) in
+  let g3 := rename_in_order 
+                (mk_cmn_edge g2 K3 1 (snd (gr_rng g2)) 1 3) in
+  let g4 := rename_in_order 
+                (mk_cmn_edge g3 K3 1 (snd (gr_rng g3)) 1 3) in
+  rename_in_order (add_edge (2, snd (gr_rng g4)) g4).
 \end{verbatim}
 
+Т.~е. граф {\tt H} построен из $5$ копий {\tt K3}, склеенных друг с другом по ребру, и добавленного ребра.
 
-  
+\begin{figure}[ht] 
+  \center
+  \includegraphics [width=0.5\linewidth] {Graph_J}
+  \caption{Граф J} 
+  \label{img:Graph_J}
+\end{figure}
+
+Граф {\tt J} состоит их 6 копий {\tt H}, склеенных между собой по ребру.
 \begin{verbatim}
-Definition mk_cmn_edge (g1 g2 : graph) (a b n m : node) : graph :=
-(* Make graphs disjoint. *)
-  let g2' := rename_all (fun x => x + snd (gr_rng g1)) g2 in
-(* New names for the edge's vertices. *)
-  let n' := n + snd (gr_rng g1) in
-  let m' := m + snd (gr_rng g1) in
- (* Delete adge from second graph *)
-  let g2' := delete_edge g2' n' m' in
-  let g_result :=  S.fold 
-                    (fun m g' => M.add m (adj g2' m) g') 
-                    (Mdomain g2') g1 in
-  let g_result := rename_node n' a g_result in 
-  rename_node m' b g_result.
+Definition J: graph :=
+  let HH := mk_cmn_edge H H 2 3 6 7 in
+  let HH_H := mk_cmn_edge HH H 7 2 6 7 in
+  let HHH := rename_node 14 12 HH_H in
+  let HHH_H := mk_cmn_edge HHH H 6 7 6 7 in
+  let HHHH := rename_node 19 17 HHH_H in
+  let HHHH_H := mk_cmn_edge HHHH H 5 6 6 7 in
+  let HHHHH := rename_node 24 22 HHHH_H in
+  let HHHHH_H := mk_cmn_edge HHHHH H 4 5 6 7 in
+  let HHHHHH := rename_node 29 27 HHHHH_H in
+  let HHHHHH_H := mk_cmn_edge HHHHHH H 3 4 6 7 in
+  let HHHHHHH :=  rename_node 34 32 HHHHHH_H in
+  rename_in_order (rename_node 37 9 HHHHHHH).
 \end{verbatim}
 
+В графе {\tt J} вершины, находящиеся на расстоянии $2$ от центра (в данной реализации вершины 9, 12, 16, 20, 24, 28) называются {\it соединяющими вершинами}.
+
+\begin{figure}[ht] 
+  \center
+  \includegraphics [width=0.8\linewidth] {Graph_K}
+  \caption{Граф K} 
+  \label{img:Graph_K}
+\end{figure}
+
+Граф {\tt K} состоит из двух копий графа {\tt J}, соединенных по центру, и ребер между соответствующими {\it соединяющими вершинами}.
+
 \begin{verbatim}
-Definition L: graph :=
-  let KK := mk_art K K A A in
-  let KK := add_edge (B, B+snd(gr_rng K)) KK in
-  rename_in_order KK.
-\end{verbatim} 
+Definition K: graph :=
+  let JJ := mk_art J J 1 1 in
+  let JJ := add_edges [(9, 9+31); (12, 12+31); (16, 16+31); (20, 20+31);
+              (24, 24+31); (28, 28+31)] JJ in
+  rename_in_order JJ.
+\end{verbatim}
+
+Наконец, граф {\tt L} состоит из двух копий графа {\tt K}, склееных между собой по {\it соединяющей вершине} и ребра между соединяющими вершинами, являющимися противоположными точке соединения.
+
+\begin{figure}[ht] 
+  \center
+  \includegraphics [width=0.8\linewidth] {Graph_L}
+  \caption{Граф L} 
+  \label{img:Graph_L}
+\end{figure}
 
 \section{Доказательства корректности операций над графами}
 
+В файле {\tt myGraphs\_Properties.v}~\ref{lst:myGraphs_Properties} представлены доказательства корректности отпределенных ранее графов, т.~е. что они являются неориентированными графами без петель. 
+
+\begin {verbatim}
+Definition graph_ok (g : graph) := 
+  undirected g /\ no_selfloop g.
+\end{verbatim}
+
+Для доказательства корректности графов введены и доказаны вспомогательные леммы {\tt adj\_M\_In} и {\tt edge\_corr\_1}.
+
+\begin {verbatim}
+Lemma adj_M_In : forall g n m,
+  S.In m (adj g n) -> M.In n g.
+\end{verbatim}
+
+\begin {verbatim}
+Lemma edge_corr_1 : forall g n m, edge g n m -> S.In m (nodes g).
+\end{verbatim}
+
+А также определена тактика {\tt gr\_destr}.
+
+\begin {verbatim}
+Ltac gr_destr h :=   apply S.elements_1 in h; compute in h;
+  repeat rewrite InA_cons in h; rewrite InA_nil in h;
+  repeat destruct h as [? | h]; try inversion h; subst.
+\end{verbatim}
+
+Данная тактика из посылки, что {\tt i} -- вершина графа, заключает, что {\tt i} равняется какому-то числу от $1$ до количества вершин и использует инверсию на этой посылке, тем самым перебирая все возможные вершины графа.
+
+С использованием этой тактики доказательство корректности выглядит одинаково для любого построенного выше графа, приведем его для {\tt H}:
+
+\begin{verbatim}
+Lemma H_ok : graph_ok H.
+Proof.
+split.
+- unfold undirected. intros. remember H as H'.
+  clear HeqH'. apply edge_corr_1 in H.
+  gr_destr H; gr_destr H';  reflexivity.
+- unfold no_selfloop. repeat intro. remember H as H'.
+  clear HeqH'. apply edge_corr_1 in H. gr_destr H; gr_destr H';
+  discriminate.
+Qed.
+\end{verbatim}
+
+
 \chapter{Доказательство свойств раскраски малых графов в Coq}
-Назовем две раскраски $f$, $f'$ графа $G$ $существенно одинаковыми$, если существуют изоморфизм графа $g$ и перестановка цветов $ \omega $ такие, что
-$f(v) = \omega ( f'( g(v) ) )$ . Также назовем две раскраски $существенно различными$, если они не являются существенно одинаковыми.
+Назовем две раскраски $f$, $f'$ графа $G$ {\it существенно одинаковыми}, если существуют изоморфизм графа $g$ и перестановка цветов $ \omega $ такие, что
+$f(v) = \omega ( f'( g(v) ) )$ . Также назовем две раскраски {\it существенно различными}, если они не являются существенно одинаковыми.
 
 {\it Граф H} -- это граф $$H := (\{1, 2, 3, 4, 5, 6, 7 \},$$
     $$ \{(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), $$
@@ -142,6 +207,8 @@ $f(v) = \omega ( f'( g(v) ) )$ . Также назовем две раскрас
 \end{figure}
 
 В статье \cite{deGrey} утверждается что существует только 4 существенно различные раскраски графа {\tt H} в не более чем в 4 цвета. Это утверждение обосновывается перебором вариантов наличия или отсутствия монохроматических троек.
+
+Описание типов для работы с раскрасками находятся в файле {\tt my\_New\_Coloring.v}~\ref{lst:my_New_Coloring}. В нем описан индуктивный тип {\tt is\_color}, который имеет $4$ конструктора -- по номерам возможных цветов в раскраске. Тот факт, что этот тип индуктивный, позволяет использовать инверсию по этому типу.
 
 \section{Язык {\tt Ltac}, {\tt pattern matching} и {\tt goal matching} }
 В данной главе активно используется язык {\tt Ltac} и инструмент {\tt goal matching}, представляемый этим языком.
@@ -297,15 +364,6 @@ Proof.
 Qed.
 \end{verbatim}
 
-\chapter{Алгоритм раскраски графа из статьи де Грея}
-
-\section{Работа алгоритма на Python}
-\section{Реализация алгоритма в Coq}
-\label{chapt1}
-
-
-
-
 
 \chapter{Заключение}
 
@@ -326,7 +384,7 @@ Qed.
 \endgroup
  
 \begingroup
-    \lstinputlisting[caption={Листинг myGraphs\_Properties.v},label={lst:myGraphs}]{listings/myGraphs_Properties.v}
+    \lstinputlisting[caption={Листинг myGraphs\_Properties.v},label={lst:myGraphs_Properties}]{listings/myGraphs_Properties.v}
 \endgroup
 
 \begingroup
