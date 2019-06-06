@@ -32,7 +32,6 @@ Definition conodes (g: graph) : nodeset :=
    M.fold (fun _ a s => S.union a s) g S.empty.
 (* Let's try to avoid using this. *)
 
-(* Of course, for an undirected graph g, nodes g = conodes g. *)
 Compute S.elements (nodes H).
 Compute S.elements (conodes H).
 
@@ -106,6 +105,10 @@ split.
   clear HeqH'. apply edge_corr_1 in H. gr_destr H; gr_destr H';
   discriminate.
 Qed.
+
+(* Ltac gr_test_ok := split; [ unfold undirected | unfold no_selfloop ];
+  repeat intro; remember H as H'; clear HeqH'; apply edge_corr_1 in H;
+   gr_destr H; gr_destr H'; [ reflexivity | discriminate ]. *)
 
 Lemma J_ok : graph_ok J.
 Proof.
@@ -214,6 +217,36 @@ try (right; intro; rewrite H0 in H; destruct (Pos.lt_irrefl y);
          assumption); tauto.
 Qed.
 
+(* 
+Lemma delete_edge_corr' : forall g x y a b,
+  edge (delete_edge g a b) x y <-> edge g x y /\ ~(x = a /\ y = b)
+   /\ ~(x = b /\ y = a).
+Proof.
+intros. pattern g. remember (fun g0 : graph =>
+ edge (delete_edge g0 a b) x y <->  edge g0 x y /\ ~ (x = a /\ y = b) /\
+ ~ (x = b /\ y = a)) as P. apply WP.map_induction; intros; rewrite HeqP;
+   clear HeqP; split; intro.
+- unfold delete_edge, edge, adj in *. rewrite M.Empty_alt in H.
+  destruct (pos_eq_dec b y); destruct (pos_eq_dec a y).
+  destruct (M.find y m) eqn:Hmf; rewrite H in *; try discriminate.
+  + rewrite WP.F.add_eq_o in H0. apply S.mem_1 in H0. simpl in H0.
+    discriminate. assumption.
+  + rewrite WP.F.add_eq_o, H  in H0. apply S.mem_1 in H0.
+    simpl in H0. discriminate. assumption.
+  + rewrite WP.F.add_neq_o, WP.F.add_eq_o, H in H0; try assumption.
+    apply S.mem_1 in H0. simpl in H0. discriminate.
+  + do 2 rewrite WP.F.add_neq_o in H0; try assumption. rewrite H in H0.
+    apply S.mem_1 in H0. simpl in H0. discriminate.
+- unfold delete_edge, edge, adj in *. rewrite M.Empty_alt in H.
+  destruct (pos_eq_dec b y); destruct (pos_eq_dec a y);
+  repeat rewrite H in *; try discriminate; try rewrite H in H0;
+  destruct H0 as [H0 _]; apply S.mem_1 in H0; simpl in H0; discriminate.
+- unfold delete_edge, edge, adj in *. destruct (pos_eq_dec b y);
+  destruct (pos_eq_dec a y); do 2 rewrite H1 in *; destruct (pos_eq_dec b x0);
+  destruct (pos_eq_dec a x0).
+  + do 2 rewrite WP.F.add_eq_o in H2; try assumption.
+Admitted.
+*)
 
 (* Monochromatic triplet in H with center. *)
 

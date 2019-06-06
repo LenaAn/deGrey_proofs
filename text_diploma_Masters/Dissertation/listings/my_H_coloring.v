@@ -202,7 +202,7 @@ Ltac find_type H3 H5 H7 H9 H11 H13 H15 c :=
           type4_H_tac_3 H3 H5 H7 H9 H11 H13 H15
   end.
 
-Lemma coloring_triple:
+Lemma coloring_H:
   forall c: Coloring, is_good_coloring c H ->
   type1_H c \/ type2_H c \/ type3_H c \/ type4_H c.
 Proof.

@@ -73,28 +73,17 @@ Ltac type1_tac h2 h3 h4 h5 := left; unfold type1_triple; split;
     unfold same_color; try rewrite <- h3; try rewrite <- h4; try rewrite <- h5;
     split; reflexivity.
 
-Ltac contr h0' h2 h3 h4 h5 c n x :=
-  let H1 := fresh in
-  let H6 := fresh in
-  specialize (h0' 1 n);
-  rewrite <- h5 in h0'; rewrite <- h2 in h0'; exfalso;
-  assert (x <> x -> False);
-  [> cbv; try intro; assert (x =x);
-  try reflexivity; apply H1; apply H6 |
-    apply H1; apply h0'; reflexivity ].
-
-Ltac level4 h0' h2 h3 h4 h5 c :=
+Ltac contr h0' h2 h3 h4 h5 c :=
   match goal with
   | [H2 : ?x = c 1, Hn : ?x = c ?n |- type1_triple _ _ \/ type2_triple _ _ \/ type3_triple _ _] =>
-      contr h0' h2 h3 h4 h5 c n x
-  (*let H1 := fresh in
+      let H1 := fresh in
       let H6 := fresh in
       specialize (h0' 1 n);
       rewrite <- h5 in h0'; rewrite <- h2 in h0'; exfalso;
       assert (x <> x -> False);
       [> cbv; try intro; assert (x =x);
       try reflexivity; apply H1; apply H6 |
-        apply H1; apply h0'; reflexivity ] *)
+        apply H1; apply h0'; reflexivity ]
   | [ H3 : ?x = c 2, H4 : ?x = c 3, H5 : ?x = c 4  |- type1_triple _ _ \/ type2_triple _ _ \/ type3_triple _ _] =>
       type1_tac h2 h3 h4 h5
   | [ H3 : ?x = c 2, H5 : ?x = c 4 |- type1_triple _ _ \/ type2_triple _ _ \/ type3_triple _ _] =>
@@ -122,7 +111,7 @@ Ltac level3 h h0' h0 h2 h3 h4 c :=
   | [ |- type1_triple _ _ \/ type2_triple _ _ \/ type3_triple _ _] =>
     remember h as H'''' eqn:HeqH'''' ; clear HeqH''''; specialize (H'''' (3+1)); inversion H'''' as [H5|H5|H5|H5];
         remember h0 as h0'' eqn:HeqH0' ; clear HeqH0';
-           level4  h0'' h2 h3 h4 H5 c
+           contr  h0'' h2 h3 h4 H5 c
   end.
 
 Ltac level2 h h0' h0 h2 h3 c :=
@@ -154,6 +143,5 @@ Proof.
     remember H as H''; clear HeqH''; specialize (H'' 2); inversion H''; remember H0 as H0'; clear HeqH0';
       level2 H H0' H0 H2 H3 c.
 Qed.
-
 
 Close Scope positive.
