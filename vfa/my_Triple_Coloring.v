@@ -144,19 +144,4 @@ Proof.
       level2 H H0' H0 H2 H3 c.
 Qed.
 
-(*
-Definition T' := mk_graph [ (1, 3); (1, 5); (1, 7) ].
-*)
-(*
-Lemma coloring_triple_T:
-  forall c: Coloring, is_good_coloring c T ->
-  type1_triple [1; 2; 3; 4] c \/ type2_triple [1; 2; 3; 4] c \/ type3_triple [1; 2; 3; 4] c.
-Proof.
-  intros. unfold is_good_coloring in H. unfold my_New_Coloring.is_coloring in H. destruct H.
-  remember H as H'. clear HeqH'. specialize (H' 1). inversion H';
-    remember H as H''; clear HeqH''; specialize (H'' 2); inversion H''; remember H0 as H0'; clear HeqH0';
-      level2 H H0' H0 H2 H3 c.
-Qed.
-*)
-
 Close Scope positive.
