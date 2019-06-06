@@ -32,7 +32,6 @@ Definition conodes (g: graph) : nodeset :=
    M.fold (fun _ a s => S.union a s) g S.empty.
 (* Let's try to avoid using this. *)
 
-(* Of course, for an undirected graph g, nodes g = conodes g. *)
 Compute S.elements (nodes H).
 Compute S.elements (conodes H).
 
