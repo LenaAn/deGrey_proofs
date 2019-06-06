@@ -87,15 +87,73 @@ Fixpoint process_just_colored_bfs_fun
                       list_of_1_clr_av
       end.
 
-(*! FIXME: set dummy parameter to a provably safe value. *)
+Open Scope positive.
+Definition palette4: S.t := fold_right S.add S.empty [1; 2; 3; 4].
+
 
 Function process_just_colored_bfs (n: node) (g: graph) (c_a : colors_available) (clr: Coloring)
   : ( Coloring * colors_available)  :=
   process_just_colored_bfs_fun 100 n g c_a clr.
+(*
+Function select (K: nat) (g: graph) {measure M.cardinal g}: list node :=
+  match S.choose (subset_nodes (low_deg K) g) with
+  | Some n => n :: select K (remove_node n g)
+  | None => nil
+  end. *)
 
-(* TODO: need to test *)
+Fixpoint do_color
+  (g: graph) (n: node) ():
+    ( Coloring * colors_available) :=
+      let init_pair := (EmptyColoring 5, make_full_colors_available g palette4) in
+      S.fold (fun x cur_pair  =>
+                  let clr_cur := fst cur_pair in
+                  let c_a_cur := snd cur_pair in
+                  let colors_of_cur := c_a_cur x in
+                  S.fold (fun color_next ccur_pair =>
+                            let clr_ccur := fst ccur_pair in
+                            let c_a_ccur := snd ccur_pair in
+                            let new_clr_ccur := update_coloring clr_ccur x color_next in
+                            let new_S := S.remove color_next (c_a_ccur x) in
+                            let new_c_a_ccur := c_a_update c_a_ccur x new_S in
+                            process_just_colored_bfs x g new_c_a_ccur new_clr_ccur
+                          )
+                          colors_of_cur cur_pair
+              ) (nodes g) init_pair.
+
+Open Scope positive.
+
+(* K3 *)
+
+Definition coloring1 := 
+  update_coloring (EmptyColoring 5) 1 1.
 
 
+Definition S1 := fold_right S.add S.empty [1].
+
+Definition c_a_1 :=
+  c_a_update (make_full_colors_available K3 palette4) 1 S1.
+
+
+Definition clr_res1 := fst (process_just_colored_bfs 1 K3 c_a_1 coloring1).
+Definition c_a_res1 := snd (process_just_colored_bfs 1 K3 c_a_1 coloring1).
+
+
+Definition res_clr := fst (do_color K3).
+Definition res_c_a := snd (do_color K3).
+
+Compute res_c_a.
+
+Compute clr_res1 1.
+Compute clr_res1 2.
+Compute clr_res1 3.
+Compute clr_res1 4.
+
+Compute S.elements (c_a_res1 1).
+Compute S.elements (c_a_res1 2).
+Compute S.elements (c_a_res1 3).
+Compute S.elements (c_a_res1 4).
+
+(* process_just_colored_bfs seems to work *)
 
 
 (* ################################################################# *)
